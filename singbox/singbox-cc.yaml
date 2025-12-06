@@ -1,0 +1,103 @@
+# -------------------
+# 1. Sing-box 应用 (核心代理)
+# -------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sing-box-cf
+  labels:
+    app: sing-box-cf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sing-box-cf
+  template:
+    metadata:
+      labels:
+        app: sing-box-cf
+    spec:
+      # [策略] 钉在 tokyo 节点 (为了读取本地配置)
+      nodeSelector:
+        kubernetes.io/hostname: tokyo
+
+      containers:
+      - name: sing-box
+        image: ghcr.io/sagernet/sing-box:latest
+        imagePullPolicy: IfNotPresent
+        # 对应 command: -C /etc/sing-box/ run
+        args:
+        - "-C"
+        - "/etc/sing-box/"
+        - "run"
+        env:
+        - name: TZ
+          value: "Asia/Shanghai"
+        
+        ports:
+        - containerPort: 9999
+          name: mixed-port
+
+        volumeMounts:
+        - name: config-vol
+          mountPath: /etc/sing-box
+      
+      volumes:
+      - name: config-vol
+        hostPath:
+          # 宿主机路径 (tokyo 上的新目录)
+          path: /opt/k3s-data/sing-box-cf/config
+          type: DirectoryOrCreate
+
+---
+# -------------------
+# 2. Service (让 Cloudflared 找到 Singbox)
+# -------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: sing-box-cf-svc
+spec:
+  selector:
+    app: sing-box-cf
+  ports:
+    - protocol: TCP
+      port: 9999      # Service 端口
+      targetPort: 9999 # 容器端口
+  type: ClusterIP
+
+---
+# -------------------
+# 3. Cloudflared 隧道
+# -------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared-sb
+  labels:
+    app: cloudflared-sb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflared-sb
+  template:
+    metadata:
+      labels:
+        app: cloudflared-sb
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: tokyo
+      containers:
+      - name: cloudflared
+        image: cloudflare/cloudflared:latest
+        args:
+        - tunnel
+        - --no-autoupdate
+        - run
+        env:
+        - name: TUNNEL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: singbox-secret
+              key: CC_TUNNEL_TOKEN 

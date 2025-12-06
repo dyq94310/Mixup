@@ -1,0 +1,57 @@
+# 测试应用
+# 1. Deployment (定义应用)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whoami-deployment
+  labels:
+    app: whoami
+spec:
+  replicas: 2  # 爽点：让它同时跑在两个地方
+  selector:
+    matchLabels:
+      app: whoami
+  template:
+    metadata:
+      labels:
+        app: whoami
+    spec:
+      containers:
+      - name: whoami
+        image: containous/whoami  # 一个极其轻量的测试镜像
+        ports:
+        - containerPort: 80
+
+---
+# 2. Service (定义内网通道)
+apiVersion: v1
+kind: Service
+metadata:
+  name: whoami-service
+spec:
+  selector:
+    app: whoami
+  ports:
+    - protocol: TCP
+      port: 80      # 集群内部访问端口
+      targetPort: 80 # 容器自身端口
+  type: ClusterIP
+
+---
+# 3. Ingress (定义公网访问入口)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: whoami-ingress
+spec:
+  rules:
+  - host: demo.107.175.145.125.nip.io  # <--- 自动解析到你的 Master IP
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: whoami-service
+            port:
+              number: 80

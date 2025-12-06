@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sing-box
+  labels:
+    app: sing-box
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sing-box
+  template:
+    metadata:
+      labels:
+        app: sing-box
+    spec:
+      # [关键1] 钉在 hyt 上
+      nodeSelector:
+        kubernetes.io/hostname: hyt
+      
+      # [2] 关键修复：容忍 "low-resource" 污点
+      # 拿着这张通行证，就算 hyt 拒绝普通应用，sing-box 也能进去
+      tolerations:
+      - key: "low-resource"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      # [关键2] 开启 Host 网络模式 (对应 network_mode: host)
+      # 注意：这会直接占用 hyt 的端口，请确保 hyt 防火墙放行了相关代理端口
+      hostNetwork: true
+
+      # [关键修改] 改为 Default
+      # 意思是：完全继承 hyt 机器的 /etc/resolv.conf，不走 K3s CoreDNS
+      # 这样效果就和 Docker 一模一样了
+      dnsPolicy: Default
+
+      containers:
+      - name: sing-box
+        image: ghcr.io/sagernet/sing-box:latest
+        imagePullPolicy: IfNotPresent
+        
+        # 对应 command: -C /etc/sing-box/ run
+        args:
+        - "-C"
+        - "/etc/sing-box/"
+        - "run"
+        
+        env:
+        - name: TZ
+          value: "Asia/Shanghai"
+        
+        # 对应 volumes
+        volumeMounts:
+        - name: config-vol
+          mountPath: /etc/sing-box
+        - name: data-vol
+          mountPath: /etc/data
+        
+      volumes:
+      - name: config-vol
+        hostPath:
+          path: /opt/k3s-data/sing-box/config
+          type: DirectoryOrCreate
+      - name: data-vol
+        hostPath:
+          path: /opt/k3s-data/sing-box/data
+          type: DirectoryOrCreate

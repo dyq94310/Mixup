@@ -1,0 +1,109 @@
+# -------------------
+# 1. Nodepass Dash 应用
+# -------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodepassdash
+  labels:
+    app: nodepassdash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nodepassdash
+  template:
+    metadata:
+      labels:
+        app: nodepassdash
+    spec:
+      # [1] 钉在 hyt 上 (为了读写本地数据库)
+      nodeSelector:
+        kubernetes.io/hostname: tokyo
+      
+      containers:
+      - name: nodepassdash
+        image: ghcr.io/nodepassproject/nodepassdash:latest
+        ports:
+        - containerPort: 3000
+        
+        # [3] 健康检查 (对应 Docker 的 healthcheck)
+        # K3s 会自动请求这个地址，如果返回 200 就认为健康
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+        
+        volumeMounts:
+        - name: data-vol
+          mountPath: /app/db
+        - name: tz-vol
+          mountPath: /etc/localtime
+          readOnly: true
+      
+      volumes:
+      - name: data-vol
+        hostPath:
+          path: /opt/k3s-data/nodepass-dash/db
+          type: DirectoryOrCreate
+      - name: tz-vol
+        hostPath:
+          path: /etc/localtime
+          type: File
+
+---
+# -------------------
+# 2. Service (内部连接桥梁)
+# -------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodepassdash-svc
+spec:
+  selector:
+    app: nodepassdash
+  ports:
+    - protocol: TCP
+      port: 3000      # Service 暴露的端口
+      targetPort: 3000 # 容器内部端口
+  type: ClusterIP
+
+---
+# -------------------
+# 3. Cloudflared 隧道
+# -------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared-np
+  labels:
+    app: cloudflared-np
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflared-np
+  template:
+    metadata:
+      labels:
+        app: cloudflared-np
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: tokyo
+      containers:
+      - name: cloudflared
+        image: cloudflare/cloudflared:latest
+        args:
+        - tunnel
+        - --no-autoupdate
+        - run
+        env:
+        - name: TUNNEL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: nodepass-secret
+              key: DASH_TUNNEL_TOKEN 

@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: komari
+  labels:
+    app: komari
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: komari
+  template:
+    metadata:
+      labels:
+        app: komari
+    spec:
+      # [策略] 钉在 ccs (Master) 上，读取本地数据
+      nodeSelector:
+        kubernetes.io/hostname: hosteons
+      
+      containers:
+      - name: komari
+        image: ghcr.io/komari-monitor/komari:latest
+        ports:
+        - containerPort: 25774
+        env:
+        - name: ADMIN_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: komari-secret
+              key: ADMIN_USERNAME 
+      
+        # [直接填入] 密码
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: komari-secret
+              key: ADMIN_PASSWORD 
+        
+        # 开启内置 Tunnel
+        - name: KOMARI_ENABLE_CLOUDFLARED
+          value: "true"
+        
+        # [直接填入] Cloudflare Token
+        - name: KOMARI_CLOUDFLARED_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: komari-secret
+              key: KOMARI_CLOUDFLARED_TOKEN
+
+        volumeMounts:
+        - name: data-vol
+          mountPath: /app/data
+      
+      volumes:
+      - name: data-vol
+        hostPath:
+          # 宿主机路径 (ccs 上的目录)
+          path: /opt/k3s-data/komari
+          type: DirectoryOrCreate

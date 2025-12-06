@@ -1,0 +1,5 @@
+*.key
+*.crt
+plain-*.yaml
+plain*.yaml
+*.pem
