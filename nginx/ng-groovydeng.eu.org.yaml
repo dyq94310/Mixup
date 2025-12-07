@@ -30,7 +30,7 @@ data:
 
         server {
             listen 80;
-            server_name groovydeng.eu.org blog.groovydeng.eu.org;;
+            server_name groovydeng.eu.org blog.groovydeng.eu.org;
 
             location / {
                 root   /usr/share/nginx/html;
