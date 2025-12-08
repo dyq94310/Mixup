@@ -3,3 +3,6 @@
 plain-*.yaml
 plain*.yaml
 *.pem
+kubeconfig
+*.conf
+.env
