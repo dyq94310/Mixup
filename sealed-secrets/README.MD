@@ -29,6 +29,14 @@ kubeseal --format=yaml < plain.yaml > sealed-secret.yaml
 rm plain.yaml
 ```
 
+**5. apply密文文件**
+
+```bash
+apply -f sealed-secret.yaml
+
+```
+
+**6.修改项目yaml,引用密文**
 
 ```yaml
 env:
@@ -43,3 +51,4 @@ env:
               name: komari-secret
               key: KOMARI_CLOUDFLARED_TOKEN
 ```
+
