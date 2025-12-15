@@ -1,4 +1,9 @@
 
+**0 备份密钥**
+```bash
+kubectl get secret -n kube-system -l sealedsecrets.bitnami.com/sealed-secrets-key -o yaml > master-key-final.yaml
+```
+
 **1 填空 (编辑文件)**
 
 每次有新项目，复制这个模版，填入你的真密码。比如 `plain.yaml`：
