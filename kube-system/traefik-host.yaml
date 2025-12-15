@@ -1,0 +1,45 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    global:
+      systemDefaultRegistry: ""
+
+    deployment:
+      kind: DaemonSet
+      dnsPolicy: ClusterFirst   
+
+    hostNetwork: false          
+
+    updateStrategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 2
+        maxSurge: 0
+
+    ports:
+      traefik:
+        port: 9876
+        expose:
+          default: false
+
+      web:
+        port: 8000
+        hostPort: 80
+        expose:
+          default: true
+
+      websecure:
+        port: 8443
+        hostPort: 443
+        expose:
+          default: true
+
+    service:
+      enabled: false
+
+    nodeSelector:
+      ingress: "true"
