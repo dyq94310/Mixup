@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: realm-rich
+  namespace: default
+  labels:
+    app: realm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: realm
+  template:
+    metadata:
+      labels:
+        app: realm
+    spec:
+      # 1. 对应 Docker 的 network_mode: host
+      hostNetwork: true
+      dnsPolicy: Default
+
+      nodeSelector:
+        kubernetes.io/hostname: rich
+
+      containers:
+        - name: realm
+          image: liuweitao/realm:latest
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: local-config
+              mountPath: /etc/realm/config.toml
+              readOnly: true
+      
+      volumes:
+        - name: local-config
+          hostPath:
+            path: /opt/k3s-data/realm/config.toml 
+            type: File
