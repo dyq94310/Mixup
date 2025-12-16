@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: npmaster-hyt
+  name: npmaster-rich
   labels:
     app: npmaster
 spec:
@@ -16,16 +16,8 @@ spec:
       labels:
         app: npmaster
     spec:
-      # [1] 钉在 hyt 上
       nodeSelector:
-        kubernetes.io/hostname: hyt
-      
-      # [2] 容忍 hyt 的 "low-resource" 污点
-      tolerations:
-      - key: "low-resource"
-        operator: "Equal"
-        value: "true"
-        effect: "NoSchedule"
+        kubernetes.io/hostname: rich
 
       # [3] 开启 Host 网络模式 (对应 network_mode: host)
       # 注意：这会占用 hyt 的 9090 端口
