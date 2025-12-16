@@ -17,9 +17,8 @@ spec:
       labels:
         app: vaultwarden
     spec:
-      # [关键] 强制让 Pod 跑在 Hosteons 机器上，这样才能读到原有的数据
       nodeSelector:
-        kubernetes.io/hostname: hosteons # 请确认 kubectl get nodes 显示的名字是这个
+        kubernetes.io/hostname: hosteons
       containers:
       - name: vaultwarden
         image: vaultwarden/server:latest
@@ -34,23 +33,21 @@ spec:
       volumes:
       - name: data-vol
         hostPath:
-          # [必须修改] 这里填你在第一步获取的 Hosteons 上的绝对路径
           path: /opt/k3s-data/vaultwarden
           type: Directory
 
 ---
-# 定义一个 Service，让 Cloudflared 能找到 Vaultwarden
 apiVersion: v1
 kind: Service
 metadata:
-  name: vaultwarden-svc # [记注这个名字]
+  name: vaultwarden-svc
 spec:
   selector:
     app: vaultwarden
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
+  - protocol: TCP
+    port: 80
+    targetPort: 80
   type: ClusterIP
 
 ---
@@ -64,7 +61,7 @@ metadata:
   labels:
     app: cloudflared
 spec:
-  replicas: 1 # Tunnel 只需要一个副本
+  replicas: 1
   selector:
     matchLabels:
       app: cloudflared
@@ -73,19 +70,38 @@ spec:
       labels:
         app: cloudflared
     spec:
-      # Tunnel 其实跑在哪个节点都行，但为了管理方便，也可以让它跑在 Hosteons
-      # nodeSelector:
-      #   kubernetes.io/hostname: hosteons
       containers:
       - name: cloudflared
         image: cloudflare/cloudflared:latest
         args:
-        - tunnel
-        - --no-autoupdate
-        - run
+          - tunnel
+          - --no-autoupdate
+          - --protocol
+          - http2
+          - --metrics
+          - 0.0.0.0:20241
+          - run
         env:
         - name: TUNNEL_TOKEN
           valueFrom:
             secretKeyRef:
               name: vw-tunnel-secret
-              key: TUNNEL_TOKEN 
+              key: TUNNEL_TOKEN
+
+        # 探针：cloudflared 进入“坏状态”时能自动拉起
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 20241
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 20241
+          initialDelaySeconds: 30
+          periodSeconds: 20
+          timeoutSeconds: 2
+          failureThreshold: 3
