@@ -35,7 +35,7 @@
 
 ### 基础设施 (infra)
 - **Traefik**: 集群的大门，管流量的。
-- **Sealed Secrets**: 专门用来给密码加密，这样我就能放心地把配置传到 GitHub 上了。
+- **Sealed Secrets**: 专门用来给密码加密，这样我就能放心地把配置传到 GitHub 上了。具体怎么用看这里：[使用说明](infra/sealed-secrets/README.MD)。
 
 ### 业务应用 (app)
 - **监控**: 用 `uptime-kuma` 盯着我的服务，挂了能及时发现。
@@ -51,7 +51,7 @@ kubectl apply -f app/<应用名>/
 ```
 
 ### 看看状态
-强烈推荐用 `k9s`，用过都说好。具体怎么操作看这里：[doc/k9s.md](doc/k9s.md)。
+强烈推荐用 `k9s`，用过都说好。具体操作指南：[doc/k9s.md](doc/k9s.md)。
 
 ## 运维小贴士
 网络测试、容器调试之类的命令我都记在 [doc/ops.md](doc/ops.md) 里了，省得每次都要去搜。
