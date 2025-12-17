@@ -9,6 +9,8 @@ metadata:
     app: sing-box-cf
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: sing-box-cf
@@ -23,7 +25,7 @@ spec:
 
       containers:
       - name: sing-box
-        image: ghcr.io/sagernet/sing-box:latest
+        image: ghcr.io/sagernet/sing-box:v1.12.13
         imagePullPolicy: IfNotPresent
         # 对应 command: -C /etc/sing-box/ run
         args:
