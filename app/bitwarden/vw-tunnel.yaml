@@ -9,6 +9,8 @@ metadata:
     app: vaultwarden
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: vaultwarden
@@ -21,7 +23,7 @@ spec:
         kubernetes.io/hostname: hosteons
       containers:
       - name: vaultwarden
-        image: vaultwarden/server:latest
+        image: docker.io/vaultwarden/server@sha256:3afff94efefc5a4bb89af2fb86f3ac27dff197089e8749ef3c903ed781debd78
         ports:
         - containerPort: 80
         env:
