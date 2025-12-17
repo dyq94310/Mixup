@@ -29,8 +29,7 @@ spec:
         ports:
         - containerPort: 3000
         
-        # [3] 健康检查 (对应 Docker 的 healthcheck)
-        # K3s 会自动请求这个地址，如果返回 200 就认为健康
+        # 健康检查保持不变
         livenessProbe:
           httpGet:
             path: /api/health
@@ -59,7 +58,7 @@ spec:
 
 ---
 # -------------------
-# 2. Service (内部连接桥梁)
+# 2. Service (保持不变)
 # -------------------
 apiVersion: v1
 kind: Service
@@ -70,42 +69,36 @@ spec:
     app: nodepassdash
   ports:
     - protocol: TCP
-      port: 3000      # Service 暴露的端口
+      port: 3000       # Service 暴露的端口
       targetPort: 3000 # 容器内部端口
   type: ClusterIP
 
 ---
 # -------------------
-# 3. Cloudflared 隧道
+# 3. Ingress (新增部分 - 替代 Tunnel)
 # -------------------
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: cloudflared-np
-  labels:
-    app: cloudflared-np
+  name: nodepassdash-ingress
+
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: cloudflared-np
-  template:
-    metadata:
-      labels:
-        app: cloudflared-np
-    spec:
-      nodeSelector:
-        kubernetes.io/hostname: tokyo
-      containers:
-      - name: cloudflared
-        image: cloudflare/cloudflared:latest
-        args:
-        - tunnel
-        - --no-autoupdate
-        - run
-        env:
-        - name: TUNNEL_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: nodepass-secret
-              key: DASH_TUNNEL_TOKEN 
+  tls:
+    - hosts:
+        - np.groovydeng.eu.org
+
+      # 复用你现有的泛域名证书 Secret
+      secretName: cf-tls
+
+  rules:
+  - host: np.groovydeng.eu.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nodepassdash-svc
+            port:
+              # 这里必须对应 Service 暴露的端口
+              number: 3000
