@@ -72,7 +72,7 @@ spec:
       
       containers:
       - name: nginx
-        image: nginx:latest
+        image: nginx:1.29.4
         imagePullPolicy: IfNotPresent
         
         ports:
