@@ -9,6 +9,8 @@ metadata:
     app: nodepassdash
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: nodepassdash
@@ -23,7 +25,7 @@ spec:
       
       containers:
       - name: nodepassdash
-        image: ghcr.io/nodepassproject/nodepassdash:latest
+        image: ghcr.io/nodepassproject/nodepassdash:3.2.7
         ports:
         - containerPort: 3000
         
