@@ -20,7 +20,7 @@ spec:
       
       containers:
       - name: komari
-        image: ghcr.io/komari-monitor/komari:latest
+        image: ghcr.io/komari-monitor/komari:1.1.3
         ports:
         - containerPort: 25774
         env:
