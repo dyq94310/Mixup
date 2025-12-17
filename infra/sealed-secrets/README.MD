@@ -56,4 +56,3 @@ env:
               name: komari-secret
               key: KOMARI_CLOUDFLARED_TOKEN
 ```
-
