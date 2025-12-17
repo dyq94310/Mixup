@@ -1,5 +1,5 @@
 # -------------------
-# 1. Vaultwarden 部分
+# 1. Vaultwarden Deployment 
 # -------------------
 apiVersion: apps/v1
 kind: Deployment
@@ -29,6 +29,9 @@ spec:
         env:
         - name: SIGNUPS_ALLOWED
           value: "false"
+        # 建议开启 WebSocket 支持（对于手机端同步很重要）
+        - name: WEBSOCKET_ENABLED
+          value: "true" 
         volumeMounts:
         - name: data-vol
           mountPath: /data
@@ -39,6 +42,9 @@ spec:
           type: Directory
 
 ---
+# -------------------
+# 2. Service (保持不变)
+# -------------------
 apiVersion: v1
 kind: Service
 metadata:
@@ -54,56 +60,28 @@ spec:
 
 ---
 # -------------------
-# 2. Cloudflared 部分
+# 3. Ingress (新增部分)
 # -------------------
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: cloudflared
-  labels:
-    app: cloudflared
+  name: vaultwarden-ingress
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: cloudflared
-  template:
-    metadata:
-      labels:
-        app: cloudflared
-    spec:
-      containers:
-      - name: cloudflared
-        image: cloudflare/cloudflared:latest
-        args:
-          - tunnel
-          - --no-autoupdate
-          - --protocol
-          - http2
-          - --metrics
-          - 0.0.0.0:20241
-          - run
-        env:
-        - name: TUNNEL_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: vw-tunnel-secret
-              key: TUNNEL_TOKEN
+  tls:
+    - hosts:
+        - value.groovydeng.eu.org
+      # 复用你现有的泛域名证书 Secret
+      secretName: cf-tls
 
-        # 探针：cloudflared 进入“坏状态”时能自动拉起
-        readinessProbe:
-          httpGet:
-            path: /metrics
-            port: 20241
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 2
-          failureThreshold: 3
-        livenessProbe:
-          httpGet:
-            path: /metrics
-            port: 20241
-          initialDelaySeconds: 30
-          periodSeconds: 20
-          timeoutSeconds: 2
-          failureThreshold: 3
+  rules:
+  # !!! 请务必修改这里为你的真实域名 !!!
+  - host: value.groovydeng.eu.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: vaultwarden-svc
+            port:
+              number: 80
