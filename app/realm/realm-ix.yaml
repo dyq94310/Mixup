@@ -7,6 +7,8 @@ metadata:
     app: realm
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: realm
@@ -24,7 +26,7 @@ spec:
 
       containers:
         - name: realm
-          image: liuweitao/realm:latest
+          image: liuweitao/realm:2.9.2-2
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: local-config
