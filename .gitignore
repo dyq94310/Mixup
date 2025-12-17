@@ -6,3 +6,4 @@ plain*.yaml
 kubeconfig
 *.conf
 .env
+.aider*
