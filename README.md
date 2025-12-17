@@ -1,56 +1,56 @@
-# K3s 集群配置管理
+# 🚀 我的 K3s 实验室
 
-本项目用于管理 K3s 集群的资源清单（Manifests），采用 GitOps 的思路对基础设施和业务应用进行版本控制。
+这里是我 K3s 集群的“大本营”。我把所有的 YAML 配置文件都丢在这儿，用 GitOps 的思路来折腾我的基础设施和各种好玩的应用。
 
-## 目录结构
+## 目录里都有啥？
 
 ```bash
 .
-├── app/                    # 业务应用配置
-│   ├── bitwarden/          # Vaultwarden 隧道配置
-│   ├── komari/             # Komari 应用及加密密钥
-│   ├── nginx/              # Nginx 站点配置 (groovydeng.eu.org)
-│   ├── nodepass/           # Nodepass 节点管理 (dash, master)
-│   ├── realm/              # Realm 端口转发配置
-│   ├── singbox/            # Sing-box 网络工具
-│   ├── uptime-kuma/        # 状态监控面板
-│   └── whoami/             # HTTP 测试工具
-├── doc/                    # 项目文档
-│   ├── k9s.md              # k9s 工具使用指南
-│   └── ops.md              # 运维手册与常用命令
-├── infra/                  # 基础设施组件
-│   ├── kube-system/        # 系统级组件配置 (如 Traefik Host)
-│   └── sealed-secrets/     # Sealed Secrets 控制器及示例
+├── app/                    # 业务应用（我的各种玩具）
+│   ├── bitwarden/          # 密码管理隧道
+│   ├── komari/             # Komari 应用
+│   ├── nginx/              # 个人站点 (groovydeng.eu.org)
+│   ├── nodepass/           # 节点管理
+│   ├── realm/              # 端口转发神器
+│   ├── singbox/            # 网络工具
+│   ├── uptime-kuma/        # 看看服务挂没挂
+│   └── whoami/             # 简单的 HTTP 测试
+├── doc/                    # 备忘录
+│   ├── k9s.md              # k9s 怎么用
+│   └── ops.md              # 常用运维命令（防忘）
+├── infra/                  # 基础设施（集群的底座）
+│   ├── kube-system/        # 系统组件 (Traefik 之类的)
+│   └── sealed-secrets/     # 秘密加密工具
 ├── .gitignore
 └── README.md
 ```
 
-## 核心组件说明
+## 核心组件
 
 ### 基础设施 (infra)
-- **Traefik**: 作为集群的 Ingress Controller，处理外部流量进入。
-- **Sealed Secrets**: 用于将敏感信息（如密码、Token）加密为可安全提交到 Git 的资源。
+- **Traefik**: 集群的大门，管流量的。
+- **Sealed Secrets**: 专门用来给密码加密，这样我就能放心地把配置传到 GitHub 上了。
 
 ### 业务应用 (app)
-- **监控**: 使用 `uptime-kuma` 进行服务可用性监控。
-- **网络与转发**: 包含 `realm` 端口转发、`singbox` 以及 `bitwarden` 的隧道配置。
-- **管理工具**: `nodepass` 相关组件用于节点或密码管理。
+- **监控**: 用 `uptime-kuma` 盯着我的服务，挂了能及时发现。
+- **网络与转发**: `realm`、`singbox` 还有 `bitwarden` 隧道，搞定各种奇奇怪怪的网络需求。
+- **管理工具**: `nodepass` 相关的东西，用于节点和密码管理。
 
-## 快速开始
+## 怎么玩？
 
 ### 部署应用
-通常可以使用 kubectl 直接应用对应的 yaml 文件：
+直接用 kubectl 梭哈：
 ```bash
-kubectl apply -f app/<app-name>/
+kubectl apply -f app/<应用名>/
 ```
 
-### 查看集群状态
-推荐使用 `k9s` 工具进行交互式管理，详细操作指南请参考 [doc/k9s.md](doc/k9s.md)。
+### 看看状态
+强烈推荐用 `k9s`，用过都说好。具体怎么操作看这里：[doc/k9s.md](doc/k9s.md)。
 
-## 运维指南
-关于网络测试（netshoot）、容器调试（kubectl debug）等常用指令，请参阅 [doc/ops.md](doc/ops.md)。
+## 运维小贴士
+网络测试、容器调试之类的命令我都记在 [doc/ops.md](doc/ops.md) 里了，省得每次都要去搜。
 
-## 安全规范
-- **禁止** 直接提交明文 Secret 到仓库。
-- 所有敏感配置必须通过 `kubeseal` 加密生成 `SealedSecret` 后方可提交。
-- `.gitignore` 已配置过滤常见的敏感文件后缀（如 `.key`, `.crt`, `.pem`, `kubeconfig` 等），请务必遵守。
+## 安全守则
+- **千万别** 把明文密码（Secret）直接传上来！
+- 所有的敏感信息都要先用 `kubeseal` 加密成 `SealedSecret`。
+- `.gitignore` 已经帮我拦住了一些敏感文件，但自己提交前还是要留个心眼。
