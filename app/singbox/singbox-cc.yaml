@@ -22,6 +22,8 @@ spec:
       # [策略] 钉在 tokyo 节点 (为了读取本地配置)
       nodeSelector:
         kubernetes.io/hostname: tokyo
+      hostNetwork: true
+      dnsPolicy: Default
 
       containers:
       - name: sing-box
