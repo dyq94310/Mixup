@@ -28,6 +28,10 @@ spec:
         image: ghcr.io/nodepassproject/nodepassdash:3.2.7
         ports:
         - containerPort: 3000
+        resources:
+          limits:
+            # 80% cpu
+            cpu: "800m" 
         
         # 健康检查保持不变
         livenessProbe:
