@@ -4,20 +4,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sing-box-cf
+  name: sing-box-cc
   labels:
-    app: sing-box-cf
+    app: sing-box-cc
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: sing-box-cf
+      app: sing-box-cc
   template:
     metadata:
       labels:
-        app: sing-box-cf
+        app: sing-box-cc
     spec:
       # [策略] 钉在 tokyo 节点 (为了读取本地配置)
       nodeSelector:
@@ -38,9 +38,10 @@ spec:
         - name: TZ
           value: "Asia/Shanghai"
         
+        # 9999 是 Cloudflare vless 端口
         ports:
         - containerPort: 9999
-          name: mixed-port
+          name: cf-api
 
         volumeMounts:
         - name: config-vol
@@ -52,56 +53,50 @@ spec:
           # 宿主机路径 (tokyo 上的新目录)
           path: /opt/k3s-data/sing-box-cf/config
           type: DirectoryOrCreate
-
 ---
-# -------------------
-# 2. Service (让 Cloudflared 找到 Singbox)
-# -------------------
+# 2. Service: 连接 Ingress 和 Pod
+# ==========================================
 apiVersion: v1
 kind: Service
 metadata:
-  name: sing-box-cf-svc
+  name: sing-box-cc-svc
+  namespace: default
 spec:
   selector:
-    app: sing-box-cf
+    app: sing-box-cc
   ports:
     - protocol: TCP
-      port: 9999      # Service 端口
-      targetPort: 9999 # 容器端口
+      name: web
+      port: 80       # Service 暴露给 Ingress 的端口
+      targetPort: 9999 # Pod 实际监听的端口
+  # 即使是 hostNetwork 的 Pod，ClusterIP Service 依然能通过 Label 找到它
   type: ClusterIP
 
 ---
-# -------------------
-# 3. Cloudflared 隧道
-# -------------------
-apiVersion: apps/v1
-kind: Deployment
+# ==========================================
+# 3. Ingress: 管理面板的域名入口 (HTTPS)
+# ==========================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: cloudflared-sb
-  labels:
-    app: cloudflared-sb
+  name: sing-box-cc-ingress
+  namespace: default
+  # 保持简洁，不要多余的 annotations
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: cloudflared-sb
-  template:
-    metadata:
-      labels:
-        app: cloudflared-sb
-    spec:
-      nodeSelector:
-        kubernetes.io/hostname: tokyo
-      containers:
-      - name: cloudflared
-        image: cloudflare/cloudflared:latest
-        args:
-        - tunnel
-        - --no-autoupdate
-        - run
-        env:
-        - name: TUNNEL_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: singbox-secret
-              key: CC_TUNNEL_TOKEN 
+  tls:
+    - hosts:
+        - vless.groovydeng.eu.org
+      # 复用你现有的泛域名证书 Secret
+      secretName: cf-tls
+
+  rules:
+    - host: vless.groovydeng.eu.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sing-box-cc-svc 
+                port:
+                  number: 80
