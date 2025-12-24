@@ -42,7 +42,14 @@ spec:
         # 优化：禁止 Gitea 检查更新，减少出口流量
         - name: GITEA__admin__DISABLE_REGULAR_ORG_CREATION
           value: "true"
-          
+         # [新增] 强制覆盖显示的 SSH 端口
+        - name: GITEA__server__SSH_PORT
+          value: "30222"
+        # [新增] 强制覆盖显示的域名 (防止之前安装时填错)
+        - name: GITEA__server__SSH_DOMAIN
+          value: "git.groovydeng.eu.org" 
+
+
         ports:
         - name: http
           containerPort: 3000
