@@ -11795,6 +11795,8 @@ spec:
         app.kubernetes.io/instance: flux-system
         app.kubernetes.io/part-of: flux
     spec:
+      nodeSelector:
+          kubernetes.io/hostname: ccs
       containers:
       - args:
         - --events-addr=http://notification-controller.flux-system.svc.cluster.local./
@@ -11884,6 +11886,8 @@ spec:
         app.kubernetes.io/instance: flux-system
         app.kubernetes.io/part-of: flux
     spec:
+      nodeSelector:
+          kubernetes.io/hostname: ccs
       containers:
       - args:
         - --events-addr=http://notification-controller.flux-system.svc.cluster.local./
@@ -11973,6 +11977,8 @@ spec:
         app.kubernetes.io/instance: flux-system
         app.kubernetes.io/part-of: flux
     spec:
+      nodeSelector:
+          kubernetes.io/hostname: ccs
       containers:
       - args:
         - --watch-all-namespaces
@@ -12068,6 +12074,8 @@ spec:
         app.kubernetes.io/instance: flux-system
         app.kubernetes.io/part-of: flux
     spec:
+      nodeSelector:
+          kubernetes.io/hostname: ccs
       containers:
       - args:
         - --events-addr=http://notification-controller.flux-system.svc.cluster.local./
