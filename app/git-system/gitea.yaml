@@ -1,0 +1,136 @@
+# -------------------
+# 1. Deployment (核心应用)
+# -------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea
+  # namespace: default (不写默认就是 default)
+  labels:
+    app: gitea
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: gitea
+  template:
+    metadata:
+      labels:
+        app: gitea
+    spec:
+      # 强制钉在 Master 节点 (ccs)
+      nodeSelector:
+        kubernetes.io/hostname: ccs 
+      
+      containers:
+      - name: gitea
+        image: gitea/gitea:1.25.3
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: USER_UID
+          value: "1000"
+        - name: USER_GID
+          value: "1000"
+        - name: GITEA__database__DB_TYPE
+          value: "sqlite3"
+        - name: GITEA__database__PATH
+          value: "/data/gitea.db"
+        - name: GITEA__server__DISABLE_ROUTER_LOG
+          value: "true"
+        # 优化：禁止 Gitea 检查更新，减少出口流量
+        - name: GITEA__admin__DISABLE_REGULAR_ORG_CREATION
+          value: "true"
+          
+        ports:
+        - name: http
+          containerPort: 3000
+        - name: ssh
+          containerPort: 22
+          
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+            
+        volumeMounts:
+        - name: gitea-data
+          mountPath: /data
+          
+      volumes:
+      - name: gitea-data
+        hostPath:
+          path: /opt/k3s-data/gitea
+          type: DirectoryOrCreate
+
+---
+# -------------------
+# 2. Service (HTTP)
+# -------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-svc
+  # namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: gitea
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+
+---
+# -------------------
+# 3. Service (SSH NodePort)
+# -------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-ssh
+  # namespace: default
+spec:
+  type: NodePort
+  selector:
+    app: gitea
+  ports:
+  - name: ssh
+    port: 22
+    targetPort: 22
+    # 为了防止端口冲突，这里固定使用 30222
+    # 以后 git clone ssh://git.你的域名:30222/...
+    nodePort: 30222 
+
+---
+# -------------------
+# 4. Ingress (Web 访问入口)
+# -------------------
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gitea-ingress
+spec:
+  tls:
+    - hosts:
+        - git.groovydeng.eu.org
+      # 复用你现有的泛域名证书 Secret
+      secretName: cf-tls
+
+spec:
+  rules:
+  # [必改] 你的域名
+  - host: git.groovydeng.eu.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gitea-svc
+            port:
+              number: 3000
