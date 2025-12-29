@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sing-box
+  name: sing-box-hyt
   labels:
     app: sing-box
 spec:
@@ -60,9 +60,9 @@ spec:
         
       volumes:
       - name: config-vol
-        hostPath:
-          path: /opt/k3s-data/sing-box/config
-          type: DirectoryOrCreate
+        secret:
+          # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
+          secretName: sing-box-config-hyt
       - name: data-vol
         hostPath:
           path: /opt/k3s-data/sing-box/data

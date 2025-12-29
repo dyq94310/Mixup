@@ -1,0 +1,15 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: k3s-private-repo
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  # [关键] 使用集群内部 DNS 地址
+  url: http://gitea-svc.default.svc.cluster.local:3000/k3s/k3s-private.git
+  ref:
+    branch: master
+  # 如果仓库是私有的，需要配置密码
+  secretRef:
+    name: gitea-auth
+
