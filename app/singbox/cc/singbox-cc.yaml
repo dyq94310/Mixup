@@ -46,12 +46,18 @@ spec:
         volumeMounts:
         - name: config-vol
           mountPath: /etc/sing-box
+        - name: data-vol
+          mountPath: /etc/data
       
       volumes:
       - name: config-vol
         secret:
           # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
           secretName: sing-box-config-cc
+      - name: data-vol
+        hostPath:
+          path: /opt/k3s-data/sing-box/data
+          type: DirectoryOrCreate
 
 ---
 # 2. Service: 连接 Ingress 和 Pod
