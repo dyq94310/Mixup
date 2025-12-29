@@ -49,10 +49,10 @@ spec:
       
       volumes:
       - name: config-vol
-        hostPath:
-          # 宿主机路径 (tokyo 上的新目录)
-          path: /opt/k3s-data/sing-box-cf/config
-          type: DirectoryOrCreate
+        secret:
+          # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
+          secretName: sing-box-config-cc
+
 ---
 # 2. Service: 连接 Ingress 和 Pod
 # ==========================================
