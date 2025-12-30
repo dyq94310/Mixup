@@ -104,8 +104,6 @@ spec:
         - git.groovydeng.eu.org
       # 复用你现有的泛域名证书 Secret
       secretName: cf-tls
-
-spec:
   rules:
   # [必改] 你的域名
   - host: git.groovydeng.eu.org
