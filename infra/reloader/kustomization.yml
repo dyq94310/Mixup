@@ -5,7 +5,7 @@ kind: Kustomization
 
 resources:
 
-  - https://github.com/stakater/Reloader/deployments/kubernetes
+  - https://github.com/stakater/Reloader/deployments/kubernetes?ref=v1.4.12 
 
 
 namespace: reloader
