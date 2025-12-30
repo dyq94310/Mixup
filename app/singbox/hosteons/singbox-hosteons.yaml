@@ -56,10 +56,6 @@ spec:
         
       volumes:
       - name: config-vol
-        hostPath:
-          path: /etc/sing-box
-          type: Directory
-        # secret:
-        #   # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
-        #   # secretName: sing-box-config-hosteons
-        #   mountPath: /etc/sing-box
+        secret:
+          # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
+          secretName: sing-box-config-hosteons
