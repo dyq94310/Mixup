@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sing-box-hosteons
+  name: sing-box-ix
   labels:
     app: sing-box
 spec:
@@ -17,7 +17,7 @@ spec:
         app: sing-box
     spec:
       nodeSelector:
-        kubernetes.io/hostname: hosteons
+        kubernetes.io/hostname: ix-20
       
       # [2] 关键修复：容忍 "low-resource" 污点
       tolerations:
@@ -58,4 +58,4 @@ spec:
       - name: config-vol
         secret:
           # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
-          secretName: sing-box-config-hosteons
+          secretName: sing-box-config-ix
