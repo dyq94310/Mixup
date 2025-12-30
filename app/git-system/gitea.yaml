@@ -42,7 +42,7 @@ spec:
         # 优化：禁止 Gitea 检查更新，减少出口流量
         - name: GITEA__admin__DISABLE_REGULAR_ORG_CREATION
           value: "true"
-         # [新增] 强制覆盖显示的 SSH 端口
+         # [新增] 强制覆盖显示的 SSH 端口,我这里是TS组网，用不上ssh
         - name: GITEA__server__SSH_PORT
           value: "30222"
         # [新增] 强制覆盖显示的域名 (防止之前安装时填错)
@@ -91,27 +91,6 @@ spec:
   - name: http
     port: 3000
     targetPort: 3000
-
----
-# -------------------
-# 3. Service (SSH NodePort)
-# -------------------
-apiVersion: v1
-kind: Service
-metadata:
-  name: gitea-ssh
-  # namespace: default
-spec:
-  type: NodePort
-  selector:
-    app: gitea
-  ports:
-  - name: ssh
-    port: 22
-    targetPort: 22
-    # 为了防止端口冲突，这里固定使用 30222
-    # 以后 git clone ssh://git.你的域名:30222/...
-    nodePort: 30222 
 
 ---
 # -------------------
