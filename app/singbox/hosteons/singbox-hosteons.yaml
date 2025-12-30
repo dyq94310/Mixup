@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sing-box-hyt
+  name: sing-box-hosteons
   labels:
     app: sing-box
 spec:
@@ -16,12 +16,10 @@ spec:
       labels:
         app: sing-box
     spec:
-      # [关键1] 钉在 hyt 上
       nodeSelector:
-        kubernetes.io/hostname: hyt
+        kubernetes.io/hostname: hosteons
       
       # [2] 关键修复：容忍 "low-resource" 污点
-      # 拿着这张通行证，就算 hyt 拒绝普通应用，sing-box 也能进去
       tolerations:
       - key: "low-resource"
         operator: "Equal"
@@ -58,6 +56,10 @@ spec:
         
       volumes:
       - name: config-vol
-        secret:
-          # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
-          secretName: sing-box-config-hyt
+        hostPath:
+          path: /etc/sing-box
+          type: Directory
+        # secret:
+        #   # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
+        #   # secretName: sing-box-config-hosteons
+        #   mountPath: /etc/sing-box
