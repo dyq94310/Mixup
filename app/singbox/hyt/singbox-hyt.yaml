@@ -55,8 +55,6 @@ spec:
         volumeMounts:
         - name: config-vol
           mountPath: /etc/sing-box
-        - name: data-vol
-          mountPath: /etc/data
         
       volumes:
       - name: config-vol
