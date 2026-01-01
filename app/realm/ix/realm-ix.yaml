@@ -19,7 +19,6 @@ spec:
       labels:
         app: realm
     spec:
-      # 1. 对应 Docker 的 network_mode: host
       hostNetwork: true
       dnsPolicy: Default
 
@@ -34,9 +33,21 @@ spec:
             - name: local-config
               mountPath: /etc/realm/config.toml
               readOnly: true
-      
+
+          # 用 shell 启动，并把 stdout/stderr tee 到同目录 realm.log
+          command: ["/bin/sh", "-lc"]
+          args:
+            - "/usr/local/bin/realm -c /etc/realm/config.toml 2>&1 | tee -a ./realm.log"
+          livenessProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -lc
+              - "! grep -qiE 'panicked' /realm/realm.log"
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 1
       volumes:
         - name: local-config
           secret:
-          # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
             secretName: realm-config-ix
