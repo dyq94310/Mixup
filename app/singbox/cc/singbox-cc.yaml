@@ -15,11 +15,11 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: sing-box-cc
+      app: sing-box
   template:
     metadata:
       labels:
-        app: sing-box-cc
+        app: sing-box
     spec:
       # [策略] 钉在 tokyo 节点 (为了读取本地配置)
       nodeSelector:
