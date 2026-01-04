@@ -28,7 +28,7 @@ spec:
 
       containers:
       - name: npmaster
-        image: ghcr.io/yosebyte/nodepass:v1.12.0
+        image: ghcr.io/yosebyte/nodepass:v1.13.0
         imagePullPolicy: IfNotPresent
         
         # [5] 对应 docker-compose 的 command
