@@ -23,7 +23,7 @@ spec:
         kubernetes.io/hostname: hosteons
       containers:
       - name: vaultwarden
-        image: docker.io/vaultwarden/server@sha256:3afff94efefc5a4bb89af2fb86f3ac27dff197089e8749ef3c903ed781debd78
+        image: docker.io/vaultwarden/server@sha256:1d43c6754a030861f960fd4dab47e1b33fc19f05bd5f8f597ab7236465a6f14b
         ports:
         - containerPort: 80
         env:
