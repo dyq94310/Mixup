@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: realm-rich
+  name: realm-pre
   namespace: default
   labels:
     app: realm
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
-  replicas: 1
+  replicas: 2
   strategy:
     type: Recreate
   selector:
@@ -23,8 +23,25 @@ spec:
       hostNetwork: true
       dnsPolicy: Default
 
-      nodeSelector:
-        kubernetes.io/hostname: rich
+      affinity:
+        # ① 只允许调度到 role=pre 的 node
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: role
+                operator: In
+                values:
+                - pre
+
+        # ② 同一 node 上不允许有第二个 realm-pre
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: realm
+            topologyKey: kubernetes.io/hostname
+
 
       containers:
         - name: realm
@@ -53,4 +70,4 @@ spec:
         - name: local-config
           secret:
           # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
-            secretName: realm-config-rich
+            secretName: realm-config-pre
