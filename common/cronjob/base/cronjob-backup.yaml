@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: k3s-node-backup-daily-hyt
+  name: k3s-backup-placeholder
   namespace: common
   annotations:
     reloader.stakater.com/auto: "true"
@@ -20,7 +20,7 @@ spec:
           
           # 方式 B: 或者使用标签选择 (二选一，如果用了 nodeName 就不需要这个)
           nodeSelector:
-            kubernetes.io/hostname: "hyt"
+            kubernetes.io/hostname: "placeholder"
 
           restartPolicy: OnFailure
           

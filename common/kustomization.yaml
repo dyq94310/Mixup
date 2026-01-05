@@ -11,4 +11,4 @@ spec:
     name: k3s-private-repo  # 引用你已经建好的源
   path: "./common/auth/common" # 指向仓库里的具体目录
   prune: true
-  wait: true
+  wait: truek

@@ -1,0 +1,10 @@
+# kubectl kustomize common/cronjob/overlays/ 测试
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ./cc
+  - ./ccs
+  - ./hos
+  - ./hyt
