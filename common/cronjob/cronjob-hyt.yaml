@@ -1,0 +1,103 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: k3s-node-backup-daily-hyt
+  namespace: common
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  # 每天凌晨 4 点执行 (Cron 表达式: 分 时 日 月 周)
+  schedule: "0 4 * * *"
+  # 如果上一个任务没跑完，不启动新的，避免堆积
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          # --- 关键控制点：指定在该节点运行 ---
+          # 方式 A: 直接指定节点名
+          # nodeName: "YOUR_NODE_NAME_HERE"
+          
+          # 方式 B: 或者使用标签选择 (二选一，如果用了 nodeName 就不需要这个)
+          nodeSelector:
+            kubernetes.io/hostname: "hyt"
+
+          restartPolicy: OnFailure
+          
+          # 容忍度：确保能在 Master 节点上运行
+          tolerations:
+          - effect: NoSchedule
+            operator: Exists
+          - key: CriticalAddonsOnly
+            operator: Exists
+
+          containers:
+          - name: backup-worker
+            image: rclone/rclone:latest
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                set -e
+                # 开启 pipefail，确保 tar 失败时脚本报错退出
+                set -o pipefail
+
+                echo "[$(date)] Rclone 环境就绪，开始备份..."
+                
+                # 定义变量方便后续使用
+                DATE=$(date +%Y%m%d)
+                FILE_NAME="k3s-data-${MY_NODE_NAME}-${DATE}.tar.gz"
+                DEST="mys3:${S3_BUCKET}/backups/${MY_NODE_NAME}/${FILE_NAME}"
+                CLEAN_DIR="mys3:${S3_BUCKET}/backups/${MY_NODE_NAME}/"
+
+                # 2. 核心逻辑：打包并流式上传
+                echo "正在打包并上传至: $DEST"
+                tar -cz -C /host-data . | rclone rcat "$DEST"
+
+                echo "上传成功。"
+
+                # 3. 清理逻辑：保留 10 天
+                echo "正在清理 10 天前的旧备份..."
+                rclone delete "$CLEAN_DIR" --min-age 10d
+                
+                echo "[$(date)] 任务顺利完成。"
+            env:
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            
+            # --- Rclone 环境变量配置 (代替 rclone.conf) ---
+            - name: RCLONE_CONFIG_MYS3_TYPE
+              value: "s3"
+            - name: RCLONE_CONFIG_MYS3_PROVIDER
+              value: "Other"
+              
+            - name: RCLONE_CONFIG_MYS3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: common-secret-config
+                  key: RCLONE_CONFIG_MYS3_ACCESS_KEY_ID
+            - name: RCLONE_CONFIG_MYS3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: common-secret-config
+                  key: RCLONE_CONFIG_MYS3_SECRET_ACCESS_KEY
+
+            - name: RCLONE_CONFIG_MYS3_ENDPOINT
+              value: "http://rustfs-svc.rustfs.svc.cluster.local:9000"
+            - name: RCLONE_CONFIG_MYS3_ACL
+              value: "private"
+
+            - name: S3_BUCKET
+              value: "k3s-bk"
+              
+            volumeMounts:
+            - name: k3s-data
+              mountPath: /host-data
+              readOnly: true
+          
+          volumes:
+          - name: k3s-data
+            hostPath:
+              path: /opt/k3s-data
+              type: Directory
