@@ -40,8 +40,8 @@ spec:
 
       containers:
       - name: sing-box
-        image: ghcr.io/sagernet/sing-box:v1.12.13
-        imagePullPolicy: IfNotPresent
+        image: ghcr.io/sagernet/sing-box:latest
+        imagePullPolicy: Always
         
         # 对应 command: -C /etc/sing-box/ run
         args:

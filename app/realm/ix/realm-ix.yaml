@@ -27,7 +27,7 @@ spec:
 
       containers:
         - name: realm
-          image: liuweitao/realm:2.9.2-2
+          image: liuweitao/realm:latest
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: local-config
