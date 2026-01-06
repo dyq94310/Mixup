@@ -34,4 +34,4 @@ spec:
             - "--no-autoupdate"
             - "run"
             - "--token"
-            - "REMOVED"
+            - "xxx"
