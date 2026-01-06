@@ -8,3 +8,6 @@ resources:
   - ./ccs
   - ./hos
   - ./hyt
+  - ./rich
+  - ./ix
+  - ./aliyun-sz

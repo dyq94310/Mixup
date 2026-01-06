@@ -1,0 +1,15 @@
+resources:
+  - ../../base
+
+# 这里的补丁会精确修改 base 里的内容
+patches:
+  - target:
+      kind: CronJob
+      name: k3s-backup-placeholder
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: k3s-node-backup-daily-aliyun-sz  # 修改任务名
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/nodeSelector/kubernetes.io~1hostname
+        value: "aliyun-sz"           # 修改目标节点
