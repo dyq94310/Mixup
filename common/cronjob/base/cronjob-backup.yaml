@@ -38,26 +38,32 @@ spec:
             args:
               - |
                 set -e
-                # 开启 pipefail，确保 tar 失败时脚本报错退出
                 set -o pipefail
 
-                echo "[$(date)] Rclone 环境就绪，开始备份..."
+                echo "[$(date)] 开始双重备份任务..."
                 
-                # 定义变量方便后续使用
                 DATE=$(date +%Y%m%d)
                 FILE_NAME="k3s-data-${MY_NODE_NAME}-${DATE}.tar.gz"
-                DEST="mys3:${S3_BUCKET}/backups/${MY_NODE_NAME}/${FILE_NAME}"
-                CLEAN_DIR="mys3:${S3_BUCKET}/backups/${MY_NODE_NAME}/"
+                
+                # 定义两个目的地
+                DEST_RUSTFS="mys3:${S3_BUCKET}/backups/${MY_NODE_NAME}/${FILE_NAME}"
+                DEST_R2="cfr2:${R2_BUCKET}/backups/${MY_NODE_NAME}/${FILE_NAME}"
 
-                # 2. 核心逻辑：打包并流式上传
-                echo "正在打包并上传至: $DEST"
-                tar -cz -C /host-data . | rclone rcat "$DEST"
+                # 1. 备份到 RustFS (本地)
+                echo "正在上传至 RustFS: $DEST_RUSTFS"
+                tar -cz -C /host-data . | rclone rcat "$DEST_RUSTFS"
 
-                echo "上传成功。"
+                # 2. 备份到 Cloudflare R2 (远程)
+                # 重新运行一次 tar。虽然多花一点 CPU，但比在容器内存里缓存整个压缩包安全
+                echo "正在上传至 Cloudflare R2: $DEST_R2"
+                tar -cz -C /host-data . | rclone rcat "$DEST_R2"
 
-                # 3. 清理逻辑：保留 10 天
-                echo "正在清理 10 天前的旧备份..."
-                rclone delete "$CLEAN_DIR" --min-age 10d
+                echo "所有上传成功。"
+
+                # 3. 清理逻辑 (两边都保留 10 天)
+                echo "正在清理旧备份..."
+                rclone delete "mys3:${S3_BUCKET}/backups/${MY_NODE_NAME}/" --min-age 10d
+                rclone delete "cfr2:${R2_BUCKET}/backups/${MY_NODE_NAME}/" --min-age 10d
                 
                 echo "[$(date)] 任务顺利完成。"
             env:
@@ -90,6 +96,29 @@ spec:
 
             - name: S3_BUCKET
               value: "k3s-bk"
+
+              # --- 新增的 Cloudflare R2 配置 ---
+            - name: RCLONE_CONFIG_CFR2_TYPE
+              value: "s3"
+            - name: RCLONE_CONFIG_CFR2_PROVIDER
+              value: "Cloudflare"
+            - name: RCLONE_CONFIG_CFR2_NO_CHECK_BUCKET
+              value: "true"
+            - name: RCLONE_CONFIG_CFR2_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: common-secret-config
+                  key: RCLONE_CONFIG_CFR2_ACCESS_KEY_ID
+            - name: RCLONE_CONFIG_CFR2_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: common-secret-config
+                  key: RCLONE_CONFIG_CFR2_SECRET_ACCESS_KEY
+            - name: RCLONE_CONFIG_CFR2_ENDPOINT
+              value: "https://df9ea185b64531a1d64cf67c3bdc8209.r2.cloudflarestorage.com"
+            - name: R2_BUCKET
+              value: "k3s-backup" # 你在 CF 创建的 Bucket 名字
+
               
             volumeMounts:
             - name: k3s-data
