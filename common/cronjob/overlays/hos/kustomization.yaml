@@ -11,5 +11,5 @@ patches:
         path: /metadata/name
         value: k3s-node-backup-daily-hos  # 修改任务名
       - op: replace
-        path: /spec/jobTemplate/spec/template/spec/nodeName
-        value: "hos"           # 修改目标节点
+        path: /spec/jobTemplate/spec/template/spec/nodeSelector/kubernetes.io~1hostname
+        value: "hosteons"           # 修改目标节点
