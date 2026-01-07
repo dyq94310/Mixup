@@ -38,9 +38,9 @@ spec:
         - containerPort: 3000
         env:
         - name: GF_AUTH_ANONYMOUS_ENABLED
-          value: "true" # 实验环境可开启匿名访问
-        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-          value: "Admin"
+          value: "false"  # 禁用匿名访问
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "123456" # 设置初始 admin 密码,重置方式: kubectl exec -it <grafana-pod-name> -n monitoring -- grafana-cli admin reset-admin-password <新密码>
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/lib/grafana # 挂载到数据目录
@@ -55,3 +55,39 @@ spec:
         configMap:
           name: grafana-datasources 
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  ports:
+    - port: 3000      # Service 暴露的端口
+      targetPort: 3000 # Pod 监听的端口
+      protocol: TCP
+      name: http
+  selector:
+    app: grafana      # 必须完全匹配你 Deployment 里的 labels.app
+  type: ClusterIP     # 因为你用 Ingress，所以这里用内部 IP 即可
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-ingress
+  namespace: monitoring
+spec:
+  tls:
+  - hosts:
+    - grafana.groovydeng.eu.org
+    secretName: cf-tls
+  rules:
+  - host: grafana.groovydeng.eu.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              number: 3000
