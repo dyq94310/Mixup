@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+      - job_name: 'node-exporter'
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          # 默认 node 指标在 10250，我们需要强制指向 node-exporter 的 9100
+          - source_labels: [__address__]
+            regex: '(.*):10250'
+            replacement: '${1}:9100'
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: prometheus }
+  template:
+    metadata:
+      labels: { app: prometheus }
+    spec:
+      serviceAccountName: prometheus  # 加上这一行
+      nodeSelector:
+        kubernetes.io/hostname: ccs 
+      # 如果你需要持久化数据，可以在这里加 PVC
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v3.9.0
+        args:
+          - "--config.file=/etc/prometheus/prometheus.yml"
+          - "--storage.tsdb.retention.time=7d"
+        ports:
+          - containerPort: 9090
+        volumeMounts:
+          - name: config
+            mountPath: /etc/prometheus
+          - name: prometheus-data
+            mountPath: /prometheus                     # 挂载持久化存储
+      volumes:
+        - name: config
+          configMap:
+            name: prometheus-config
+        - name: prometheus-data
+          persistentVolumeClaim:
+            claimName: prometheus-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  ports:
+    - port: 9090
+      targetPort: 9090
+      protocol: TCP
+      name: web
+  selector:
+    app: prometheus  # 必须匹配 Deployment 中的 selector
+  type: ClusterIP    # 集群内部访问即可

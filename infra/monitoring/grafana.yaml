@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+data:
+  prometheus.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090  # 这里使用 Service 名
+        isDefault: true
+        editable: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      securityContext:
+          fsGroup: 472 # 关键：确保卷的权限属于 Grafana 用户
+      containers:
+      - name: grafana
+        image: grafana/grafana:12.3.1
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true" # 实验环境可开启匿名访问
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: "Admin"
+        volumeMounts:
+        - name: grafana-storage
+          mountPath: /var/lib/grafana # 挂载到数据目录
+        - name: ds-config
+          mountPath: /etc/grafana/provisioning/datasources # 挂载到配置目录
+          readOnly: true
+      volumes:
+      - name: grafana-storage
+        persistentVolumeClaim:
+          claimName: grafana-pvc
+      - name: ds-config
+        configMap:
+          name: grafana-datasources 
+---

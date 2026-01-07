@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# 强制将所有资源（除了 ClusterRole）放入此 Namespace
+namespace: monitoring
+
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - node-exporter.yaml
+  - prometheus-pvc.yaml
+  - prometheus.yaml
+  - grafana.yaml
+  - grafana-pvc.yaml

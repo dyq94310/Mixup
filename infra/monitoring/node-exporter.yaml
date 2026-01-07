@@ -1,0 +1,40 @@
+# node-exporter.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  labels: { app: node-exporter }
+spec:
+  selector:
+    matchLabels: { app: node-exporter }
+  template:
+    metadata:
+      labels: { app: node-exporter }
+    spec:
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+      - operator: "Exists" # 容忍所有存在的污点
+      containers:
+      - name: node-exporter
+        image: prom/node-exporter:v1.10.2
+        args:
+          - "--path.procfs=/host/proc"
+          - "--path.sysfs=/host/sys"
+          - "--collector.tcpstat"    # 重点：监控 TCP 连接状态
+          - "--collector.netstat"    # 重点：监控重传数据
+        ports:
+          - containerPort: 9100
+            hostPort: 9100
+        volumeMounts:
+          - name: proc
+            mountPath: /host/proc
+            readOnly: true
+          - name: sys
+            mountPath: /host/sys
+            readOnly: true
+      volumes:
+        - name: proc
+          hostPath: { path: /proc }
+        - name: sys
+          hostPath: { path: /sys }
