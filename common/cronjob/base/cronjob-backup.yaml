@@ -51,12 +51,12 @@ spec:
 
                 # 1. 备份到 RustFS (本地)
                 echo "正在上传至 RustFS: $DEST_RUSTFS"
-                tar -cz -C /host-data . | rclone rcat "$DEST_RUSTFS"
+                tar -cz -C /host-data --exclude='rustfs*' . | rclone rcat "$DEST_RUSTFS"
 
                 # 2. 备份到 Cloudflare R2 (远程)
                 # 重新运行一次 tar。虽然多花一点 CPU，但比在容器内存里缓存整个压缩包安全
                 echo "正在上传至 Cloudflare R2: $DEST_R2"
-                tar -cz -C /host-data . | rclone rcat "$DEST_R2"
+                tar -cz -C /host-data --exclude='rustfs*' . | rclone rcat "$DEST_R2"
 
                 echo "所有上传成功。"
 
