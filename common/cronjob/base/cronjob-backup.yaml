@@ -33,7 +33,7 @@ spec:
 
           containers:
           - name: backup-worker
-            image: rclone/rclone:latest
+            image: rclone/rclone:v1.72-stable
             command: ["/bin/sh", "-c"]
             args:
               - |
