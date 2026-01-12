@@ -93,8 +93,6 @@ spec:
           mountPath: /usr/share/nginx/html
           readOnly: true
           
-        # [已删除] 日志挂载已移除，现在日志会直接输出到 kubectl logs
-
       volumes:
       - name: config-main
         configMap:
@@ -106,11 +104,9 @@ spec:
           type: DirectoryOrCreate
           
       - name: html-public
-        hostPath:
-          path: /opt/k3s-data/nginx-compose/public
-          type: DirectoryOrCreate
+        persistentVolumeClaim:
+          claimName: hugo-public
           
-      # [已删除] 宿主机的日志目录挂载已移除
 
 ---
 # -------------------
