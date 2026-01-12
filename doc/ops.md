@@ -1,5 +1,14 @@
 常用命令
 
+在某个节点上搞事，加污点
+kubectl taint nodes unode key=value:NoExecute
+NoSchedule ：表示k8s将不会将Pod调度到具有该污点的Node上
+PreferNoSchedule ：表示k8s将尽量避免将Pod调度到具有该污点的Node上
+NoExecute ：表示k8s将不会将Pod调度到具有该污点的Node上，同时会将Node上已经存在的Pod驱逐出去
+搞完事情去污点
+kubectl taint nodes unode key:NoExecute-
+
+
 开一个网络pod测试
 ```bash
 kubectl run -it --rm netshoot-ccs   --image=nicolaka/netshoot   --overrides='{"spec":{"nodeSelector":{"kubernetes.io/hostname":"ccs"}}}'   --restart=Never -- bash
