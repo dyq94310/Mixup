@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sing-box-hosteons
+  labels:
+    app: sing-box
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: sing-box
+  template:
+    metadata:
+      labels:
+        app: sing-box
+    spec:
+      affinity:
+        # ① 只允许调度到 role=tail 的 node
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: role
+                operator: In
+                values:
+                - tail
+
+        # ② 同一 node 上不允许有第二个 sing-box
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: sing-box
+            topologyKey: kubernetes.io/hostname
+
+      containers:
+      - name: sing-box
+        image: ghcr.io/sagernet/sing-box:latest
+        imagePullPolicy: Always
+        
+        args:
+        - "-C"
+        - "/etc/sing-box/"
+        - "run"
+        
+        env:
+        - name: TZ
+          value: "Asia/Shanghai"
+        
+        # 对应 volumes
+        volumeMounts:
+        - name: config-vol
+          mountPath: /etc/sing-box
+        - name: cert-vol
+          mountPath: /etc/cert
+      volumes:
+      - name: config-vol
+        secret:
+          # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
+          secretName: sing-box-config-tail
+      - name: cert-vol
+        hostPath: 
+          path: /opt/k3s-data/cert
