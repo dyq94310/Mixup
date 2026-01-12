@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sing-box-tail
+  name: sing-box-rear
   labels:
     app: sing-box
   annotations:
@@ -21,7 +21,7 @@ spec:
         app: sing-box
     spec:
       affinity:
-        # ① 只允许调度到 role=tail 的 node
+        # ① 只允许调度到 role=rear 的 node
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
@@ -29,7 +29,7 @@ spec:
               - key: role
                 operator: In
                 values:
-                - tail
+                - rear
 
         # ② 同一 node 上不允许有第二个 sing-box
         podAntiAffinity:
@@ -63,7 +63,7 @@ spec:
       - name: config-vol
         secret:
           # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
-          secretName: sing-box-config-tail
+          secretName: sing-box-config-rear
       - name: cert-vol
         hostPath: 
           path: /opt/k3s-data/cert

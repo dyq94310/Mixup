@@ -1,7 +1,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: sing-box-tail-sync
+  name: sing-box-rear-sync
   namespace: flux-system
 spec:
   interval: 1m
@@ -9,6 +9,6 @@ spec:
   sourceRef:
     kind: GitRepository
     name: k3s-private-repo  # 引用你已经建好的源
-  path: "./singbox/tail" # 指向仓库里的具体目录
+  path: "./singbox/rear" # 指向仓库里的具体目录
   prune: true
   wait: true
