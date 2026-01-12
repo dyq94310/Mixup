@@ -14,9 +14,8 @@ spec:
       labels:
         app: komari
     spec:
-      # [策略] 钉在 ccs (Master) 上，读取本地数据
       nodeSelector:
-        kubernetes.io/hostname: hosteons
+        kubernetes.io/hostname: ccs
       
       containers:
       - name: komari
