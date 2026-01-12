@@ -26,14 +26,14 @@ spec:
         - name: ADMIN_USERNAME
           valueFrom:
             secretKeyRef:
-              name: komari-secret
+              name: default-secret-config
               key: ADMIN_USERNAME 
       
         # [直接填入] 密码
         - name: ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: komari-secret
+              name: default-secret-config
               key: ADMIN_PASSWORD 
         
         # 开启内置 Tunnel
@@ -44,7 +44,7 @@ spec:
         - name: KOMARI_CLOUDFLARED_TOKEN
           valueFrom:
             secretKeyRef:
-              name: komari-secret
+              name: default-secret-config
               key: KOMARI_CLOUDFLARED_TOKEN
 
         volumeMounts:
