@@ -7,6 +7,7 @@ PreferNoSchedule ：表示k8s将尽量避免将Pod调度到具有该污点的Nod
 NoExecute ：表示k8s将不会将Pod调度到具有该污点的Node上，同时会将Node上已经存在的Pod驱逐出去
 搞完事情去污点
 kubectl taint nodes unode key:NoExecute-
+kubectl taint nodes unode key-
 
 
 开一个网络pod测试
