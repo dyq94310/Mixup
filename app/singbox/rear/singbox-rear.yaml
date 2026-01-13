@@ -20,6 +20,8 @@ spec:
       labels:
         app: sing-box
     spec:
+      hostNetwork: true
+      dnsPolicy: Default
       affinity:
         # ① 只允许调度到 role=rear 的 node
         nodeAffinity:
