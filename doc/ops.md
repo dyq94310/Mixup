@@ -38,6 +38,13 @@ kubectl debug -it goldpinger-z7v4k \
 cat /proc/1/environ | tr '\0' '\n' | grep HOSTNAME
 ```
 
+
+控制busybox在哪个机器
+```
+kubectl -n default run curltest --rm -it --image=busybox:1.36 \
+  --overrides='{"spec":{"nodeName":"ccs"}}' -- sh
+```
+
 # 应急命令
 
 ## 强制覆盖敏感文件
