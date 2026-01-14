@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nginx-fs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi # 根据你的文件量调整
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nginx-fs-sync-manual
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: hosteons # 锁定存储节点
+      containers:
+      - name: fetch-git-fs
+        image: curlimages/curl:8.18.0
+        env:
+          - name: GITEA_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: default-secret-config
+                key: GITEA_TOKEN 
+              
+        command: ["sh", "-c"]
+        args:
+          - |
+            set -e
+            API_URL="http://gitea-svc.default.svc.cluster.local:3000/api/v1/repos/k3s/k3s-private/archive/master.tar.gz"
+            
+            echo "[Step 1] Downloading archive to temporary space..."
+            # 先下载到容器自身的临时目录，不触碰 PVC
+            mkdir -p /tmp/sync
+            curl -sSL -H "Authorization: token ${GITEA_TOKEN}" "$API_URL" | tar -xz -C /tmp/sync --strip-components=1
+            
+            # [Step 2] 校验解压内容是否存在 (针对你的 8K 小仓库路径进行检查)
+            if [ -d "/tmp/sync/nginx/fs" ]; then
+                echo "[Step 2] Success: Source files verified in /tmp/sync/nginx/fs."
+                
+                echo "[Step 3] Download verified. Now clearing PVC and syncing..."
+                # 只有下载解压成功后，才会执行清理 PVC 操作
+                rm -rf /etc/nginx/fs/* 2>/dev/null || true
+                
+                cp -r /tmp/sync/nginx/fs/. /etc/nginx/fs/
+                echo "[Step 4] Final Sync Complete."
+                ls -F /etc/nginx/fs
+            else
+                echo "[Step 2] ERROR: Repository path 'nginx/fs' not found in archive!"
+                ls -R /tmp/sync
+                exit 1
+            fi
+        volumeMounts:
+        - name: data-fs
+          mountPath: /etc/nginx/fs
+      restartPolicy: OnFailure
+      volumes:
+      - name: data-fs
+        persistentVolumeClaim:
+          claimName: nginx-fs-pvc # 挂载你的文服务存储卷

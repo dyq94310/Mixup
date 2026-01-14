@@ -99,9 +99,8 @@ spec:
           name: nginx-config
       
       - name: data-fs
-        hostPath:
-          path: /opt/k3s-data/nginx-compose/fs
-          type: DirectoryOrCreate
+        persistentVolumeClaim:
+          claimName: nginx-fs-pvc
           
       - name: html-public
         persistentVolumeClaim:
