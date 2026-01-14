@@ -22,7 +22,6 @@ kubectl run -it --rm netshoot-ccs   --image=nicolaka/netshoot   --overrides='{"s
 ```bash
 kubectl debug -it goldpinger-z7v4k \
   --image=busybox:1.36 \
-  --target=goldpinger \
   --profile=sysadmin \
   -- sh
 
@@ -33,7 +32,6 @@ cat /proc/1/environ | tr '\0' '\n' | grep HOSTNAME
 ```bash
 kubectl debug -it goldpinger-z7v4k \
   --image=nicolaka/netshoot \
-  --target=goldpinger \
   --profile=sysadmin \
   -- sh
 
