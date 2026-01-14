@@ -41,7 +41,7 @@ spec:
     service:
       enabled: false
     # 1.查看节点标签列表:
-    # kubectl label nodes hosteons ingress=true
+    # kubectl get nodes --show-labels
     # 2.用作 Ingress 的节点才打
     # kubectl label nodes ccs ingress=true
     nodeSelector:
