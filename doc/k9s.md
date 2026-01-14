@@ -104,6 +104,33 @@ k9s
 | Endpoints | `:ep`  |
 | Ingress   | `:ing` |
 
+## 自定义 K9s Plugin (一键 Debug)
+你可以通过 K9s 的插件功能，自定义一个快捷键（比如 ``shift-g``），一键启动你最常用的调试环境。
+
+编辑 ``~/.config/k9s/plugins.yaml``：
+```yaml
+plugins:
+  debug:
+    shortCut: Shift-D
+    confirm: false
+    description: "Add Debug Container"
+    scopes:
+      - pods
+    command: kubectl
+    background: false
+    args:
+      - debug
+      - -it
+      - $NAME
+      - -n
+      - $NAMESPACE
+      - --image=nicolaka/netshoot
+      - --profile=general
+      # 显式指定拉取策略，防止镜像版本缓存问题
+      - --image-pull-policy=IfNotPresent
+```
+
+
 **常见排查顺序**：
 
 1. `:svc` 看端口配置
