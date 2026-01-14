@@ -10,7 +10,9 @@ metadata:
 spec:
   replicas: 2
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: realm
@@ -45,8 +47,8 @@ spec:
 
       containers:
         - name: realm
-          image: liuweitao/realm:latest
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/zhboner/realm2:master
+          imagePullPolicy: Always
           volumeMounts:
             - name: local-config
               mountPath: /etc/realm/config.toml
@@ -56,7 +58,7 @@ spec:
           # 用 shell 启动，并把 stdout/stderr tee 到同目录 realm.log
           command: ["/bin/sh", "-lc"]
           args:
-            - "/usr/local/bin/realm -c /etc/realm/config.toml 2>&1 | tee -a ./realm.log"
+            - "realm -c /etc/realm/config.toml 2>&1 | tee -a ./realm.log"
           livenessProbe:
             exec:
               command:
