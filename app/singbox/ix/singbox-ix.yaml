@@ -42,6 +42,31 @@ spec:
         volumeMounts:
         - name: config-vol
           mountPath: /etc/sing-box
+                
+      - name: dnsproxy
+        image: adguard/dnsproxy:latest
+        args:
+          - "-l"
+          - "127.0.0.1"
+          - "-p"
+          - "5353"
+
+          - "-u"
+          - "8.8.8.8:53"
+          - "-u"
+          - "8.8.4.4:53"
+          - "-u"
+          - "1.1.1.1:53"
+          - "-u"
+          - "1.0.0.1:53"
+          - "-u"
+          - "tls://dns.adguard.com"
+          - "-u"
+          - "https://dns.google/dns-query"
+          - "--upstream-mode"
+          - "parallel"
+          - "--cache"
+          
         
       volumes:
       - name: config-vol
