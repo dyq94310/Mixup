@@ -23,7 +23,7 @@ spec:
       hostNetwork: true
       dnsPolicy: Default
       affinity:
-        # ① 只允许调度到 role=rear 的 node
+        # ① 只允许调度到 role=rear or mid 的 node
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
@@ -34,7 +34,7 @@ spec:
                 - rear
                 - mid
 
-        # ② 同一 node 上不允许有第二个 sing-box
+        # ② 同一 node 上不允许有第二个 dns
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
