@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sing-box-rear
+  name: smartdns
   labels:
-    app: sing-box
+    app: dns
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
-  replicas: 3
+  replicas: 4
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
   selector:
     matchLabels:
-      app: sing-box
+      app: dns
   template:
     metadata:
       labels:
-        app: sing-box
+        app: dns
     spec:
       hostNetwork: true
       dnsPolicy: Default
@@ -32,41 +32,28 @@ spec:
                 operator: In
                 values:
                 - rear
+                - mid
 
         # ② 同一 node 上不允许有第二个 sing-box
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
               matchLabels:
-                app: sing-box
+                app: dns
             topologyKey: kubernetes.io/hostname
 
-      containers:
-      - name: sing-box
-        image: ghcr.io/sagernet/sing-box:latest
+      containers: 
+      - name: smartdns
+        image: pymumu/smartdns:latest
         imagePullPolicy: Always
-        
-        args:
-        - "-C"
-        - "/etc/sing-box/"
-        - "run"
-        
         env:
         - name: TZ
           value: "Asia/Shanghai"
-        
-        # 对应 volumes
         volumeMounts:
         - name: config-vol
-          mountPath: /etc/sing-box
-        - name: cert-vol
-          mountPath: /etc/cert
+          mountPath: /etc/smartdns
           
       volumes:
       - name: config-vol
         secret:
-          # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
-          secretName: sing-box-config-rear
-      - name: cert-vol
-        hostPath: 
-          path: /opt/k3s-data/cert
+          secretName: smartdns-config
