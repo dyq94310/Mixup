@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: npchannel
+  namespace: default
+  labels:
+    app: npchannel
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: npchannel
+  template:
+    metadata:
+      labels:
+        app: npchannel
+    spec:
+      hostNetwork: true
+      dnsPolicy: Default
+      nodeSelector:
+        kubernetes.io/hostname: hyt
+      containers:
+        - name: npserver
+          image: ghcr.io/nodepassproject/nodepass:latest
+          imagePullPolicy: Always
+          args:
+            - "server://:9094/:29094?tls=1"
