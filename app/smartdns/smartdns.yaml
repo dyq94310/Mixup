@@ -9,9 +9,7 @@ metadata:
 spec:
   replicas: 4
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
+    type: Recreate
   selector:
     matchLabels:
       app: dns
