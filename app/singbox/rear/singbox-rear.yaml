@@ -45,7 +45,6 @@ spec:
       - name: sing-box
         image: ghcr.io/sagernet/sing-box:latest
         imagePullPolicy: Always
-        
         args:
         - "-C"
         - "/etc/sing-box/"
@@ -61,6 +60,18 @@ spec:
           mountPath: /etc/sing-box
         - name: cert-vol
           mountPath: /etc/cert
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -ec
+              - |
+                export http_proxy="http://127.0.0.1:2000"
+                export https_proxy="http://127.0.0.1:2000"
+                wget -q -T 10 -O /dev/null http://clients3.google.com/generate_204
+          periodSeconds: 120
+          timeoutSeconds: 15
+          failureThreshold: 2
           
       volumes:
       - name: config-vol
