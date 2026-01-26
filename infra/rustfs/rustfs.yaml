@@ -25,7 +25,7 @@ spec:
         kubernetes.io/hostname: ccs 
       containers:
       - name: rustfs
-        image: rustfs/rustfs:1.0.0-alpha.78 
+        image: rustfs/rustfs:1.0.0-alpha.81 
         env:
         - name: RUSTFS_ACCESS_KEY
           valueFrom:
