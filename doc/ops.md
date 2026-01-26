@@ -1,14 +1,16 @@
 常用命令
 
 在某个节点上搞事，加污点
+```bash
 kubectl taint nodes unode key=value:NoExecute
 NoSchedule ：表示k8s将不会将Pod调度到具有该污点的Node上
 PreferNoSchedule ：表示k8s将尽量避免将Pod调度到具有该污点的Node上
 NoExecute ：表示k8s将不会将Pod调度到具有该污点的Node上，同时会将Node上已经存在的Pod驱逐出去
+
 搞完事情去污点
 kubectl taint nodes unode key:NoExecute-
 kubectl taint nodes unode key-
-
+```
 
 开一个网络pod测试
 ```bash
@@ -43,6 +45,19 @@ cat /proc/1/environ | tr '\0' '\n' | grep HOSTNAME
 ```
 kubectl -n default run curltest --rm -it --image=busybox:1.36 \
   --overrides='{"spec":{"nodeName":"ccs"}}' -- sh
+```
+
+## 快速查看日志
+
+使用 awk 设定“终点线”（最推荐）
+
+这种方法最优雅，因为一旦匹配到结束时间，awk 会立即退出，不会继续读取后续没用的日志，节省资源。
+```bash
+kubectl logs <pod-name> -c <container-name> --since-time="2026-01-25T15:30:00Z" \
+| awk '$1 > "2026-01-25T15:40:00" {exit} {print}'
+
+
+kubectl logs sing-box-rear-5c86df9bb6-gzj65 -c sing-box --since-time="2026-01-25T15:30:00+08:00"| awk '$1 > "2026-01-25T15:40:00" {exit} {print}'
 ```
 
 # 应急命令
