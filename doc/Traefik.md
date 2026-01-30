@@ -6,6 +6,10 @@
 
 ## 1. 背景与现状
 
+- Traefik 是什么
+  - The Cloud Native Application Proxy 
+  - 可代替ingress-nginx
+
 - 需求：  
   - **Ingress 只部署在具备公网入口的海外节点**
 ---
