@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nft-pre
+  namespace: default
+  labels:
+    app: nft-pre
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  selector:
+    matchLabels:
+      app: nft-pre
+  template:
+    metadata:
+      labels:
+        app: nft-pre
+    spec:
+      hostNetwork: true
+      hostPID: true
+
+      affinity:
+        # ① 只允许调度到 role=pre 的 node
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: role
+                operator: In
+                values:
+                - pre
+
+        # ② 同一 node 上不允许有第二个 nft-pre
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: nft-pre
+            topologyKey: kubernetes.io/hostname
+
+      containers:
+      - name: forward
+        image: ghcr.io/nicolaka/netshoot:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        env:
+        - name: IN_IF
+          value: "ens5"
+        - name: OUT_IF
+          value: "ens5"
+        volumeMounts:
+        - name: local-config
+          mountPath: /config
+        command: ["/bin/sh","-lc"]
+        args:
+          - |
+            set -eu
+            /config/apply.sh
+            sleep infinity
+
+      volumes:
+      - name: local-config
+        secret:
+          secretName: nft-config-pre
+          defaultMode: 0755
