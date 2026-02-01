@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nft-ix
+  namespace: default
+  labels:
+    app: nft-ix
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  selector:
+    matchLabels:
+      app: nft-ix
+  template:
+    metadata:
+      labels:
+        app: nft-ix
+    spec:
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        kubernetes.io/hostname: ix-20
+
+      containers:
+      - name: forward
+        image: ghcr.io/nicolaka/netshoot:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        env:
+        - name: IN_IF
+          value: "ens18"
+        - name: OUT_IF
+          value: "ens18"
+        volumeMounts:
+        - name: local-config
+          mountPath: /config
+        command: ["/bin/sh","-lc"]
+        args:
+          - |
+            set -eu
+            /config/apply.sh
+            sleep infinity
+
+      volumes:
+      - name: local-config
+        secret:
+          secretName: nft-config-ix
+          defaultMode: 0755
