@@ -1,4 +1,3 @@
----
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -8,54 +7,60 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  # 如果你 k3s 默认就是 local-path，可以不写；写上更明确
   storageClassName: local-path
-
----  
-apiVersion: v1
-kind: Pod
+---
+apiVersion: batch/v1
+kind: Job
 metadata:
   name: hugo-build
 spec:
-  restartPolicy: Never
-  nodeSelector:
-    kubernetes.io/hostname: hosteons  # 指定在 hosteons 节点上运行 
-  volumes:
-    - name: workspace
-      emptyDir: {}
-    - name: public
-      persistentVolumeClaim:
-        claimName: hugo-public
+  backoffLimit: 0               # 失败不重试（你要重试就改成 1/2/3）
+  completions: 1
+  parallelism: 1
+  ttlSecondsAfterFinished: 10 # 可选：完成后 1 小时自动清理 Job（k3s一般可用）
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: hosteons
 
-  initContainers:
-    - name: git-clone
-      image: alpine/git:2.47.2
-      env:
-        - name: REPO_URL
-          value: "https://github.com/dyq94310/hugo-me.git" # 改
-        - name: BRANCH
-          value: "main" # 改
-      command: ["/bin/sh","-lc"]
-      args:
-        - |
-          git clone --depth=1 --branch "$BRANCH" "$REPO_URL" /workspace
-      volumeMounts:
+      volumes:
         - name: workspace
-          mountPath: /workspace
-  containers:
-    - name: hugo
-      image: hugomods/hugo:0.148.1
-      env:
-      - name: workingDir
-        value: "workspace/site"
-      workingDir: /workspace/site     # 关键：对齐你原来的 ./site
-      command: ["/bin/sh","-lc"]
-      args:
-        - |
-          rm -rf /public/*
-          hugo --minify --destination /public
-      volumeMounts:
-        - name: workspace
-          mountPath: /workspace
+          emptyDir: {}
         - name: public
-          mountPath: /public
+          persistentVolumeClaim:
+            claimName: hugo-public
+
+      initContainers:
+        - name: git-clone
+          image: alpine/git:2.47.2
+          env:
+            - name: REPO_URL
+              value: "https://github.com/dyq94310/hugo-me.git"
+            - name: BRANCH
+              value: "main"
+          command: ["/bin/sh","-lc"]
+          args:
+            - |
+              git clone --depth=1 --branch "$BRANCH" "$REPO_URL" /workspace
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+
+      containers:
+        - name: hugo
+          image: hugomods/hugo:0.148.1
+          env:
+          - name: workingDir
+            value: "workspace/site"
+          workingDir: /workspace/site
+          command: ["/bin/sh","-lc"]
+          args:
+            - |
+              rm -rf /public/*
+              hugo --minify --destination /public
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: public
+              mountPath: /public
