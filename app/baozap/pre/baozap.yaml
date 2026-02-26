@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: baozap-deployment-pre
+  labels:
+    app: baozap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: baozap
+  template:
+    metadata:
+      labels:
+        app: baozap
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: rich
+      hostNetwork: true
+      hostPID: true                    
+      securityContext:              
+        seccompProfile:
+          type: Unconfined
+      containers:
+      - name: baozap
+        image: ghcr.io/dyq94310/baozap:dev
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - NET_ADMIN
+              - BPF
+              - SYS_ADMIN
+              - SYS_RESOURCE   # extra safety
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config.json
+          subPath: config.json
+        - name: bpf-fs
+          mountPath: /sys/fs/bpf
+          mountPropagation: Bidirectional
+        - name: sysfs               # ← NEW: full sysfs for driver/XDP checks
+          mountPath: /sys
+          mountPropagation: Bidirectional
+        - name: proc                # ← NEW: often needed by libbpf
+          mountPath: /proc
+          mountPropagation: Bidirectional
+      volumes:
+      - name: config-volume
+        secret:
+          # 注意：这里的名字要和 kustomization.yaml 里的 secretGenerator 名字一致
+          secretName: baozap-config-pre
+      - name: bpf-fs
+        hostPath:
+          path: /sys/fs/bpf
+          type: DirectoryOrCreate
+      - name: sysfs
+        hostPath:
+          path: /sys
+          type: Directory
+      - name: proc
+        hostPath:
+          path: /proc
+          type: Directory

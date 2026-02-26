@@ -1,0 +1,14 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: baozap-ix-sync
+  namespace: flux-system
+spec:
+  interval: 1m
+  targetNamespace: default
+  sourceRef:
+    kind: GitRepository
+    name: k3s-private-repo  # 引用你已经建好的源
+  path: "./baozap/ix" # 指向仓库里的具体目录
+  prune: true
+  wait: true
