@@ -8,6 +8,8 @@ metadata:
     reloader.stakater.com/auto: "true"
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: baozap
@@ -16,6 +18,7 @@ spec:
       labels:
         app: baozap
     spec:
+      terminationGracePeriodSeconds: 20
       nodeSelector:
         kubernetes.io/hostname: rich
       hostNetwork: true
@@ -25,7 +28,7 @@ spec:
           type: Unconfined
       containers:
       - name: baozap
-        image: ghcr.io/dyq94310/baozap:0.1.0
+        image: ghcr.io/dyq94310/baozap:0.2.0
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
