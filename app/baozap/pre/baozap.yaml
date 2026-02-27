@@ -25,7 +25,7 @@ spec:
           type: Unconfined
       containers:
       - name: baozap
-        image: ghcr.io/dyq94310/baozap:dev
+        image: ghcr.io/dyq94310/baozap:0.1.0
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
