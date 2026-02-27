@@ -7,9 +7,12 @@ metadata:
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
-  replicas: 1
+  replicas: 2
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
   selector:
     matchLabels:
       app: baozap
@@ -19,16 +22,31 @@ spec:
         app: baozap
     spec:
       terminationGracePeriodSeconds: 20
-      nodeSelector:
-        kubernetes.io/hostname: rich
       hostNetwork: true
       hostPID: true                    
+      affinity:
+        # ① 只允许调度到 role=pre 的 node
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: role
+                operator: In
+                values:
+                - pre
+        # ② 同一 node 上不允许有第二个 baozap
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: baozap
+            topologyKey: kubernetes.io/hostname
       securityContext:              
         seccompProfile:
           type: Unconfined
       containers:
       - name: baozap
-        image: ghcr.io/dyq94310/baozap:0.2.0
+        image: ghcr.io/dyq94310/baozap:0.3.0
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
