@@ -8,40 +8,39 @@
 
 本项目采用 GitOps 的思路来折腾我的基础设施和各种好玩的应用。
 
-## 目录里都有啥？
+## 仓库结构
 
-```bash
+```text
 .
-├── app/                    # 业务应用（我的各种玩具）
-│   ├── bitwarden/          # 密码管理隧道
-│   ├── komari/             # Komari 应用
-│   ├── nginx/              # 个人站点 
-│   ├── nodepass/           # 端口转发神器
-│   ├── realm/              # 端口转发神器
-│   ├── singbox/            # 端口转发神器
-│   ├── uptime-kuma/        # 看看服务挂没挂
-│   └── whoami/             # 简单的 HTTP 测试
-│   └── git-system/         # git
-├── doc/                     # 备忘录
-│   ├── k9s.md              # k9s 怎么用
-│   └── ops.md              # 常用运维命令（防忘）
-├── infra/                   # 基础设施（集群的底座）
-│   ├── kube-system/        # 系统组件 (Traefik 之类的)
-│   └── flux-system/        # 流水线
-│   └── rustfs/             # s3文服
-├── common/                  # 公共设施
-│   ├── cronjob/            # 定时任务
-├── .gitignore
-└── README.md
+├── app/                      # 业务应用清单（Deployment/DaemonSet/Kustomization）
+│   ├── baozap/
+│   ├── bitwarden/
+│   ├── cloudflared/
+│   ├── git-system/
+│   ├── komari/
+│   ├── nft/
+│   ├── nginx/
+│   ├── nodepass/
+│   ├── realm/
+│   ├── singbox/
+│   └── smartdns/
+├── infra/                    # 基础设施
+│   ├── flux-system/          # Flux 引导与 Git 源配置
+│   ├── kube-system/          # 系统组件定制（如 Traefik）
+│   ├── monitoring/           # Prometheus / Grafana / node-exporter
+│   ├── reloader/             # 变更自动重载
+│   └── rustfs/               # RustFS 相关资源
+├── common/                   # 公共组件
+│   └── cronjob/              # 通用定时任务
+└── doc/                      # 运维备忘录
 ```
 
-## 核心组件
+## 说明
 
-### 基础设施 (infra)
-
-### 业务应用 (app)
-
-### 公共设施 (common)
+- `app/`：各应用资源与对应的 Flux `Kustomization`。
+- `infra/`：集群底座组件与运维基础能力。
+- `common/`：可复用的公共任务或配置。
+- `doc/`：常用命令与操作记录。
 
 ### 看看状态
 强烈推荐用 `k9s`。具体操作指南：[doc/k9s.md](doc/k9s.md)。
