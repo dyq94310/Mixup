@@ -20,7 +20,7 @@ spec:
       hostNetwork: true
       dnsPolicy: Default
       nodeSelector:
-        kubernetes.io/hostname: hyt
+        kubernetes.io/hostname: ccs
       containers:
         - name: npserver
           image: ghcr.io/nodepassproject/nodepass:latest
