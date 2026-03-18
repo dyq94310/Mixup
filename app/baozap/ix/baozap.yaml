@@ -28,7 +28,7 @@ spec:
           type: Unconfined
       containers:
       - name: baozap
-        image: ghcr.io/dyq94310/baozap:0.4.0
+        image: ghcr.io/dyq94310/baozap:0.4.5
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
@@ -44,13 +44,12 @@ spec:
           subPath: config.json
         - name: bpf-fs
           mountPath: /sys/fs/bpf
-          mountPropagation: Bidirectional
+          # Host mounts still visible in container, without bi-directional mount teardown complexity.
+          mountPropagation: HostToContainer
         - name: sysfs               # ← NEW: full sysfs for driver/XDP checks
           mountPath: /sys
-          mountPropagation: Bidirectional
         - name: proc                # ← NEW: often needed by libbpf
           mountPath: /proc
-          mountPropagation: Bidirectional
       volumes:
       - name: config-volume
         secret:
