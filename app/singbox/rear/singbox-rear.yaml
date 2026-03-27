@@ -43,7 +43,7 @@ spec:
 
       containers:
       - name: sing-box
-        image: ghcr.io/sagernet/sing-box:v1.12.23
+        image: ghcr.io/sagernet/sing-box:latest
         imagePullPolicy: IfNotPresent
         args:
         - "-C"
