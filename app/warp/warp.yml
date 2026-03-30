@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: warp
+  labels:
+    app: warp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: warp
+  template:
+    metadata:
+      labels:
+        app: warp
+    spec:
+      dnsPolicy: Default
+      affinity:
+        # ① 只允许调度到 role=rear 的 node
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: role
+                operator: In
+                values:
+                - rear
+
+        # ② 同一 node 上不允许有第二个 warp
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: warp
+            topologyKey: kubernetes.io/hostname
+      # 依然使用 initContainer 处理 kubelet 拦截 sysctl 的问题
+      initContainers:
+        - name: init-sysctl
+          image: busybox
+          command:
+            - sh
+            - -c
+            - "sysctl -w net.ipv4.conf.all.src_valid_mark=1"
+          securityContext:
+            privileged: true
+      containers:
+        - name: warp
+          image: ghcr.io/ccbkkb/microwarp:latest
+          ports:
+            - containerPort: 1080
+              hostPort: 1080
+              name: socks-port
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - SYS_MODULE
+          volumeMounts:
+            - name: warp-data
+              mountPath: /etc/wireguard
+      volumes:
+        - name: warp-data
+          # 为配置保留持久化目录，避免频繁重启导致重新注册账号触发限流
+          hostPath:
+            path: /opt/k3s-data/warp
+            type: DirectoryOrCreate 
