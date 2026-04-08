@@ -44,7 +44,7 @@ spec:
       containers:
       - name: sing-box
         image: ghcr.io/sagernet/sing-box:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         args:
         - "-C"
         - "/etc/sing-box/"
