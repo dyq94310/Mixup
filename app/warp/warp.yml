@@ -49,6 +49,7 @@ spec:
           ports:
             - containerPort: 1080
               hostPort: 1080
+              hostIP: 127.0.0.1
               name: socks-port
           securityContext:
             capabilities:
