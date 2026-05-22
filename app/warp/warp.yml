@@ -5,7 +5,7 @@ metadata:
   labels:
     app: warp
 spec:
-  replicas: 3
+  replicas: 4
   selector:
     matchLabels:
       app: warp
@@ -25,6 +25,7 @@ spec:
                 operator: In
                 values:
                 - rear
+                - mid
 
         # ② 同一 node 上不允许有第二个 warp
         podAntiAffinity:
