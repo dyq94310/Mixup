@@ -58,6 +58,9 @@ spec:
           volumeMounts:
             - name: warp-data
               mountPath: /etc/wireguard
+          env:
+            - name: ENDPOINT_IP
+              value: "162.159.192.1:4500"
       volumes:
         - name: warp-data
           # 为配置保留持久化目录，避免频繁重启导致重新注册账号触发限流
