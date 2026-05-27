@@ -5,7 +5,7 @@ metadata:
   labels:
     app: warp
 spec:
-  replicas: 3
+  replicas: 4
   selector:
     matchLabels:
       app: warp
@@ -25,6 +25,7 @@ spec:
                 operator: In
                 values:
                 - rear
+                - mid
 
         # ② 同一 node 上不允许有第二个 warp
         podAntiAffinity:
@@ -48,8 +49,6 @@ spec:
           image: ghcr.io/ccbkkb/microwarp:latest
           ports:
             - containerPort: 1080
-              hostPort: 1080
-              hostIP: 127.0.0.1
               name: socks-port
           securityContext:
             capabilities:
@@ -59,9 +58,29 @@ spec:
           volumeMounts:
             - name: warp-data
               mountPath: /etc/wireguard
+          env:
+            - name: ENDPOINT_IP
+              value: "162.159.192.1:4500"
       volumes:
         - name: warp-data
           # 为配置保留持久化目录，避免频繁重启导致重新注册账号触发限流
           hostPath:
             path: /opt/k3s-data/warp
             type: DirectoryOrCreate 
+---
+# 这里是分隔符，下面是 Service 的配置
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: warp-svc
+spec:
+  selector:
+    app: warp
+  ports:
+    - protocol: TCP
+      port: 1080
+      targetPort: 1080
+  type: ClusterIP
+  # 关键参数：要求 Kube-proxy 只把流量转发给同一节点上的 endpoint
+  internalTrafficPolicy: Local
