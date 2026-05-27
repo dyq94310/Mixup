@@ -32,6 +32,9 @@ spec:
         # 建议开启 WebSocket 支持（对于手机端同步很重要）
         - name: WEBSOCKET_ENABLED
           value: "true" 
+        # 关闭邀请注册功能
+        - name: INVITATIONS_ALLOWED
+          value: "false"
         volumeMounts:
         - name: data-vol
           mountPath: /data
